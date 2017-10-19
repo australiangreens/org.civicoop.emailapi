@@ -1,0 +1,9 @@
+{
+  "name": "australian_greens/org.civicoop.emailapi",
+  "type": "drupal-module",
+  "description": "Australian Greens fork of the emailapi civicrm extesnion",
+  "require": {
+    "composer/installers": "~1.0",
+    "drupal/drupal": "~7"
+  }
+}
