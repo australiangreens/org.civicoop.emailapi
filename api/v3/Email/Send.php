@@ -297,7 +297,7 @@ function civicrm_api3_email_send($params) {
     $returnValues[$contactId] = array(
       'contact_id' => $contactId,
       'send' => 1,
-      'status_msg' => 'Succesfully send e-mail to ' . ' <' . $email . '> ',
+      'status_msg' => "Successfully send e-mail to {$email}",
     );
   }
 
