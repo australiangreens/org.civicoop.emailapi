@@ -188,11 +188,11 @@ function civicrm_api3_email_send($params) {
           }
         }
 
-        CRM_Utils_Token::replaceGreetingTokens($$bodyType, $contact, $contact['contact_id']);
         $$bodyType = CRM_Utils_Token::replaceDomainTokens($$bodyType, $domain, TRUE, $tokens, TRUE);
         $$bodyType = CRM_Utils_Token::replaceContactTokens($$bodyType, $contact, FALSE, $tokens, FALSE, TRUE);
         $$bodyType = CRM_Utils_Token::replaceComponentTokens($$bodyType, $contact, $tokens, TRUE);
         $$bodyType = CRM_Utils_Token::replaceHookTokens($$bodyType, $contact, $categories, TRUE);
+        CRM_Utils_Token::replaceGreetingTokens($$bodyType, $contact, $contact['contact_id']);
       }
     }
     $html = $body_html;
@@ -205,11 +205,11 @@ function civicrm_api3_email_send($params) {
     }
 
     // do replacements in message subject
-    CRM_Utils_Token::replaceGreetingTokens($messageSubject, $contact, $contact['contact_id']);
     $messageSubject = CRM_Utils_Token::replaceContactTokens($messageSubject, $contact, false, $tokens);
     $messageSubject = CRM_Utils_Token::replaceDomainTokens($messageSubject, $domain, true, $tokens);
     $messageSubject = CRM_Utils_Token::replaceComponentTokens($messageSubject, $contact, $tokens, true);
     $messageSubject = CRM_Utils_Token::replaceHookTokens($messageSubject, $contact, $categories, true);
+    CRM_Utils_Token::replaceGreetingTokens($messageSubject, $contact, $contact['contact_id']);
 
     if (defined('CIVICRM_MAIL_SMARTY') && CIVICRM_MAIL_SMARTY) {
       $messageSubject = $smarty->fetch("string:{$messageSubject}");
