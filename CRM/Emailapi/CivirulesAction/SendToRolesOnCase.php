@@ -4,7 +4,9 @@
  * @license AGPL-3.0
  */
 
-class CRM_Emailapi_CivirulesAction_SendToRelatedContact extends CRM_Civirules_Action {
+class CRM_Emailapi_CivirulesAction_SendToRolesOnCase extends CRM_Civirules_Action {
+
+  protected static $alreadySend = array();
 
   /**
    * Process the action
@@ -14,15 +16,16 @@ class CRM_Emailapi_CivirulesAction_SendToRelatedContact extends CRM_Civirules_Ac
    */
   public function processAction(CRM_Civirules_TriggerData_TriggerData $triggerData) {
     $actionParams = $this->getActionParameters();
-    if (!empty($actionParams['file_on_case'])) {
-      $case = $triggerData->getEntityData('Case');
-      $actionParams['case_id'] = $case['id'];
-    }
+    $case = $triggerData->getEntityData('Case');
+    $actionParams['case_id'] = $case['id'];
 
     // Find the related contact(s)
-    $contactId = $triggerData->getContactId();
-    $related_contacts = $this->getRelatedContacts($contactId, $actionParams['relationship_type'], $actionParams['relationship_option']);
+    $related_contacts = $this->getRelatedContacts($case['id'], $actionParams['relationship_type']);
     foreach($related_contacts as $related_contact_id) {
+      // Make sure an e-mail is only send once for a case.
+      if (isset(self::$alreadySend[$case['id']][$related_contact_id])) {
+        continue;
+      }
       $params = $actionParams;
       $params['contact_id'] = $related_contact_id;
 
@@ -35,61 +38,29 @@ class CRM_Emailapi_CivirulesAction_SendToRelatedContact extends CRM_Civirules_Ac
       $params['extra_data'] = $extra_data["\0CRM_Civirules_TriggerData_TriggerData\0entity_data"];
       //execute the action
       civicrm_api3('Email', 'send', $params);
+      
+      self::$alreadySend[$case['id']][$related_contact_id] = true;
     }
   }
 
-  protected function getRelatedContacts($contact_id, $relationship_type, $relationship_option) {
+  protected function getRelatedContacts($case_id, $relationship_type) {
     $dir = 'b';
-    $inverse_dir = 'a';
     if (stripos($relationship_type, 'b_') === 0) {
       $dir = 'a';
-      $inverse_dir = 'b';
     }
     $relationship_type_id = substr($relationship_type, 2);
-    $dao = false;
-    switch ($relationship_option) {
-      case 'all_active':
-        $dao = CRM_Core_DAO::executeQuery("
-            SELECT contact_id_{$dir} AS contact_id
-            FROM civicrm_relationship r
-            INNER JOIN civicrm_contact c ON c.id = r.contact_id_{$dir} 
-            WHERE contact_id_{$inverse_dir} = %1 AND relationship_type_id = %2 AND is_active = 1 AND (start_date IS NULL OR start_date <= CURRENT_DATE()) AND (end_date IS NULL OR end_date >= CURRENT_DATE())
-            AND c.is_deleted = 0
-        ", array(
-          1 => array($contact_id, 'Integer'),
-          2 => array($relationship_type_id, 'Integer'),
-        ));
-        break;
-      case 'recent_active':
-        $dao = CRM_Core_DAO::executeQuery("
-            SELECT contact_id_{$dir} as contact_id, r.id, start_date, (CASE WHEN r.start_date IS NULL THEN 1 ELSE 0 END) AS start_date_not_null 
-            FROM civicrm_relationship r
-            INNER JOIN civicrm_contact c ON c.id = r.contact_id_{$dir} 
-            WHERE contact_id_{$inverse_dir} = %1 AND relationship_type_id = %2 AND is_active = 1 AND (start_date IS NULL OR start_date <= CURRENT_DATE()) AND (end_date IS NULL OR end_date >= CURRENT_DATE())
-            AND c.is_deleted = 0
-            ORDER BY start_date_not_null, r.start_date DESC, r.id DESC 
-            LIMIT 0, 1
-        ", array(
-          1 => array($contact_id, 'Integer'),
-          2 => array($relationship_type_id, 'Integer'),
-        ));
-        break;
-      case 'recent_inactive':
-        $dao = CRM_Core_DAO::executeQuery("
-            SELECT contact_id_{$dir} as contact_id, r.id, end_date, (CASE WHEN r.end_date IS NULL THEN 1 ELSE 0 END) AS end_date_not_null 
-            FROM civicrm_relationship r
-            INNER JOIN civicrm_contact c ON c.id = r.contact_id_{$dir} 
-            WHERE contact_id_{$inverse_dir} = %1 AND relationship_type_id = %2 AND is_active = 0
-            AND c.is_deleted = 0
-            ORDER BY end_date_not_null, r.end_date DESC, r.id DESC 
-            LIMIT 0, 1
-        ", array(
-          1 => array($contact_id, 'Integer'),
-          2 => array($relationship_type_id, 'Integer'),
-        ));
-        break;
+    $sql = "SELECT contact_id_{$dir} AS contact_id
+        FROM civicrm_relationship r
+        INNER JOIN civicrm_contact c ON c.id = r.contact_id_{$dir} 
+        WHERE is_active = 1 AND (start_date IS NULL OR start_date <= CURRENT_DATE()) AND (end_date IS NULL OR end_date >= CURRENT_DATE())
+        AND c.is_deleted = 0
+        AND case_id = %1";
+    $sqlParams[1] = array($case_id, 'Integer');
+    if ($relationship_type_id) {
+      $sql .= " AND relationship_type_id = %2";
+      $sqlParams[2] = array($relationship_type_id, 'Integer');
     }
-
+    $dao = CRM_Core_DAO::executeQuery($sql,$sqlParams);
     $contacts = array();
     if ($dao) {
       while($dao->fetch()) {
@@ -127,32 +98,8 @@ class CRM_Emailapi_CivirulesAction_SendToRelatedContact extends CRM_Civirules_Ac
     return FALSE;
   }
 
-  public static function getRelationshipOptions() {
-    return array(
-      'all_active' => ts('All active related contacts'),
-      'recent_active' => ts('The most recent active related contact'),
-      'recent_inactive' => ts('The most recent inactive related contact'),
-    );
-  }
-
-  public static function getRelationshipTypes($dir='both') {
-    $return = array();
-    $relationshipTypes = civicrm_api3('RelationshipType', 'Get', array('is_active' => 1, 'options' => array('limit' => 0)));
-    foreach ($relationshipTypes['values'] as $relationshipType) {
-      switch($dir) {
-        case 'a_b':
-          $return['a_'.$relationshipType['id']] = $relationshipType['label_a_b'];
-          break;
-        case 'b_a':
-          $return['b_'.$relationshipType['id']] = $relationshipType['label_b_a'];
-          break;
-        case 'both':
-          $return['a_'.$relationshipType['id']] = $relationshipType['label_a_b'];
-          $return['b_'.$relationshipType['id']] = $relationshipType['label_b_a'];
-          break;
-      }
-
-    }
+  public static function getRelationshipTypes() {
+    $return = CRM_Emailapi_CivirulesAction_SendToRelatedContact::getRelationshipTypes('a_b');
     return $return;
   }
 
@@ -166,7 +113,7 @@ class CRM_Emailapi_CivirulesAction_SendToRelatedContact extends CRM_Civirules_Ac
    * $access public
    */
   public function getExtraDataInputUrl($ruleActionId) {
-    return CRM_Utils_System::url('civicrm/civirules/actions/emailapi_relatedcontact', 'rule_action_id='.$ruleActionId);
+    return CRM_Utils_System::url('civicrm/civirules/actions/emailapi_rolesoncase', 'rule_action_id='.$ruleActionId);
   }
 
   /**
@@ -207,12 +154,8 @@ class CRM_Emailapi_CivirulesAction_SendToRelatedContact extends CRM_Civirules_Ac
     }
     $to = '';
     $relationship_types = self::getRelationshipTypes();
-    $relationship_options = self::getRelationshipOptions();
-    if ($relationship_options[$params['relationship_option']]) {
-      $to = $relationship_options[$params['relationship_option']];
-    }
     if (isset($relationship_types[$params['relationship_type']])) {
-      $to .= " with relationship: '".$relationship_types[$params['relationship_type']]."'";
+      $to .= " with role: '".$relationship_types[$params['relationship_type']]."'";
     }
 
     $cc = "";
@@ -232,5 +175,22 @@ class CRM_Emailapi_CivirulesAction_SendToRelatedContact extends CRM_Civirules_Ac
       6 => $cc,
       7 => $bcc
     ));
+  }
+
+  /**
+   * This function validates whether this action works with the selected trigger.
+   *
+   * This function could be overriden in child classes to provide additional validation
+   * whether an action is possible in the current setup.
+   *
+   * @param CRM_Civirules_Trigger $trigger
+   * @param CRM_Civirules_BAO_Rule $rule
+   * @return bool
+   */
+  public function doesWorkWithTrigger(CRM_Civirules_Trigger $trigger, CRM_Civirules_BAO_Rule $rule) {
+    if ($trigger->doesProvideEntity('Case')) {
+      return true;
+    }
+    return false;
   }
 }
