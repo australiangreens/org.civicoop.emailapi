@@ -37,6 +37,11 @@ class CRM_Emailapi_CivirulesAction_SendToRolesOnCase extends CRM_Civirules_Actio
       }
       $extra_data = (array) $triggerData;
       $params['extra_data'] = $extra_data["\0CRM_Civirules_TriggerData_TriggerData\0entity_data"];
+      foreach ($params['extra_data'] as $entity => $values) {
+        if (isset($values['id'])) {
+          $params["${entity}_id"] = $values['id'];
+        }
+      }
       //execute the action
       civicrm_api3('Email', 'send', $params);
 
