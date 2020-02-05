@@ -65,13 +65,17 @@ class CRM_Emailapi_Upgrader extends CRM_Emailapi_Upgrader_Base {
    * Upgrader to update old civicrm_queue_items so they reflect the new class names.
    */
   public function upgrade_1004() {
-    CRM_Core_DAO::executeQuery("UPDATE `civicrm_queue_item` SET data = REPLACE(data, '\"class_name\";s:28:\"CRM_Emailapi_CivirulesAction\"', '\"class_name\";s:33:\"CRM_Emailapi_CivirulesAction_Send\"')  WHERE data like '%\"class_name\";s:28:\"CRM_Emailapi_CivirulesAction\"%'");
-    CRM_Core_DAO::executeQuery("UPDATE `civicrm_queue_item` SET data = REPLACE(data, 'O:28:\"CRM_Emailapi_CivirulesAction\"', 'O:33:\"CRM_Emailapi_CivirulesAction_Send\"') WHERE data like '%O:28:\"CRM_Emailapi_CivirulesAction\"%' ");
+    if (civicrm_api3('Extension', 'get', ['full_name' => 'org.civicoop.civirules', 'status' => 'installed'])['count']){
+      CRM_Core_DAO::executeQuery("UPDATE `civicrm_queue_item` SET data = REPLACE(data, '\"class_name\";s:28:\"CRM_Emailapi_CivirulesAction\"', '\"class_name\";s:33:\"CRM_Emailapi_CivirulesAction_Send\"')  WHERE data like '%\"class_name\";s:28:\"CRM_Emailapi_CivirulesAction\"%'");
+      CRM_Core_DAO::executeQuery("UPDATE `civicrm_queue_item` SET data = REPLACE(data, 'O:28:\"CRM_Emailapi_CivirulesAction\"', 'O:33:\"CRM_Emailapi_CivirulesAction_Send\"') WHERE data like '%O:28:\"CRM_Emailapi_CivirulesAction\"%' ");
+    }
     return true;
   }
 
   public function upgrade_1005() {
-    CRM_Core_DAO::executeQuery("INSERT INTO civirule_action (name, label, class_name, is_active) VALUES('emailapi_send_rolesoncase', 'Send E-mail to contacts on a case', 'CRM_Emailapi_CivirulesAction_SendToRolesOnCase', 1);");
+    if (civicrm_api3('Extension', 'get', ['full_name' => 'org.civicoop.civirules', 'status' => 'installed'])['count']){
+      CRM_Core_DAO::executeQuery("INSERT INTO civirule_action (name, label, class_name, is_active) VALUES('emailapi_send_rolesoncase', 'Send E-mail to contacts on a case', 'CRM_Emailapi_CivirulesAction_SendToRolesOnCase', 1);");
+    }
     return true;
   }
 
