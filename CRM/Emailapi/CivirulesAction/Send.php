@@ -49,10 +49,10 @@ class CRM_Emailapi_CivirulesAction_Send extends CRM_CivirulesActions_Generic_Api
       $case = $triggerData->getEntityData('Case');
       $parameters['case_id'] = $case['id'];
     }
-		if (!empty($actionParameters['cc'])) {
+    if (!empty($actionParameters['cc'])) {
       $parameters['cc'] = $actionParameters['cc'];
     }
-		if (!empty($actionParameters['bcc'])) {
+    if (!empty($actionParameters['bcc'])) {
       $parameters['bcc'] = $actionParameters['bcc'];
     }
     $extra_data = (array) $triggerData;
@@ -72,12 +72,12 @@ class CRM_Emailapi_CivirulesAction_Send extends CRM_CivirulesActions_Generic_Api
   private function checkAlternativeAddress($actionParameters, $contactId) {
     if (isset($actionParameters['location_type_id']) && !empty($actionParameters['location_type_id'])) {
       try {
-        $alternateAddress = civicrm_api3('Email', 'getvalue', array(
+        $alternateAddress = civicrm_api3('Email', 'getvalue', [
           'return' => 'email',
           'contact_id' => $contactId,
           'location_type_id' => $actionParameters['location_type_id'],
-          'options' => array('limit' => 1, 'sort' => 'id DESC'),
-          ));
+          'options' => ['limit' => 1, 'sort' => 'id DESC'],
+        ]);
         return (string) $alternateAddress;
       }
       catch (CiviCRM_API3_Exception $ex) {
@@ -112,13 +112,7 @@ class CRM_Emailapi_CivirulesAction_Send extends CRM_CivirulesActions_Generic_Api
   public function userFriendlyConditionParams() {
     $template = 'unknown template';
     $params = $this->getActionParameters();
-    $version = CRM_Core_BAO_Domain::version();
-    // Compatibility with CiviCRM > 4.3
-    if($version >= 4.4) {
-      $messageTemplates = new CRM_Core_DAO_MessageTemplate();
-    } else {
-      $messageTemplates = new CRM_Core_DAO_MessageTemplates();
-    }
+    $messageTemplates = new CRM_Core_DAO_MessageTemplate();
     $messageTemplates->id = $params['template_id'];
     $messageTemplates->is_active = true;
     if ($messageTemplates->find(TRUE)) {
@@ -126,10 +120,10 @@ class CRM_Emailapi_CivirulesAction_Send extends CRM_CivirulesActions_Generic_Api
     }
     if (isset($params['location_type_id']) && !empty($params['location_type_id'])) {
       try {
-        $locationText = 'location type ' . civicrm_api3('LocationType', 'getvalue', array(
-          'return' => 'display_name',
-          'id' => $params['location_type_id'],
-        )) . ' with primary e-mailaddress as fall back';
+        $locationText = 'location type ' . civicrm_api3('LocationType', 'getvalue', [
+            'return' => 'display_name',
+            'id' => $params['location_type_id'],
+          ]) . ' with primary e-mailaddress as fall back';
       }
       catch (CiviCRM_API3_Exception $ex) {
         $locationText = 'location type ' . $params['location_type_id'];
@@ -143,21 +137,21 @@ class CRM_Emailapi_CivirulesAction_Send extends CRM_CivirulesActions_Generic_Api
       $to = $params['alternative_receiver_address'];
     }
     $cc = "";
-		if (!empty($params['cc'])) {
-      $cc = ts(' and cc to %1', array(1=>$params['cc']));
+    if (!empty($params['cc'])) {
+      $cc = ts(' and cc to %1', [1=>$params['cc']]);
     }
     $bcc = "";
-		if (!empty($params['bcc'])) {
-      $bcc = ts(' and bcc to %1', array(1=>$params['bcc']));
+    if (!empty($params['bcc'])) {
+      $bcc = ts(' and bcc to %1', [1=>$params['bcc']]);
     }
-    return ts('Send e-mail from "%1 (%2 using %3)" with Template "%4" to %5 %6 %7', array(
-        1=>$params['from_name'],
-        2=>$params['from_email'],
-        3=>$locationText,
-        4=>$template,
-        5 => $to,
-        6 => $cc,
-        7 => $bcc
-    ));
+    return ts('Send e-mail from "%1 (%2 using %3)" with Template "%4" to %5 %6 %7', [
+      1=>$params['from_name'],
+      2=>$params['from_email'],
+      3=>$locationText,
+      4=>$template,
+      5 => $to,
+      6 => $cc,
+      7 => $bcc
+    ]);
   }
 }

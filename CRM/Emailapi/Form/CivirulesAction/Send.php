@@ -1,7 +1,5 @@
 <?php
 
-require_once 'CRM/Core/Form.php';
-
 /**
  * Form controller class
  *
@@ -65,14 +63,14 @@ class CRM_Emailapi_Form_CivirulesAction_Send extends CRM_Core_Form {
    */
 
   protected function getMessageTemplates() {
-    $return = array('' => ts('-- please select --'));
+    $return = ['' => ts('-- please select --')];
     try {
-      $messageTemplates = civicrm_api3('MessageTemplate', 'get', array(
-        'return' => array("id", "msg_title"),
+      $messageTemplates = civicrm_api3('MessageTemplate', 'get', [
+        'return' => ["id", "msg_title"],
         'is_active' => 1,
-        'workflow_id' => array('IS NULL' => 1),
-        'options' => array('limit' => 0, 'sort' => "msg_title"),
-      ));
+        'workflow_id' => ['IS NULL' => 1],
+        'options' => ['limit' => 0, 'sort' => "msg_title"],
+      ]);
       foreach ($messageTemplates['values'] as $templateId => $template) {
         $return[$templateId] = $template['msg_title'];
       }
@@ -90,13 +88,13 @@ class CRM_Emailapi_Form_CivirulesAction_Send extends CRM_Core_Form {
    */
 
   protected function getLocationTypes() {
-    $return = array('' => ts('-- please select --'));
+    $return = ['' => ts('-- please select --')];
     try {
-      $locationTypes = civicrm_api3('LocationType', 'get', array(
-        'return' => array("id", "display_name"),
+      $locationTypes = civicrm_api3('LocationType', 'get', [
+        'return' => ["id", "display_name"],
         'is_active' => 1,
-        'options' => array('limit' => 0, 'sort' => "display_name"),
-      ));
+        'options' => ['limit' => 0, 'sort' => "display_name"],
+      ]);
       foreach ($locationTypes['values'] as $locationTypeId => $locationType) {
         $return[$locationTypeId] = $locationType['display_name'];
       }
@@ -109,7 +107,7 @@ class CRM_Emailapi_Form_CivirulesAction_Send extends CRM_Core_Form {
   function buildQuickForm() {
 
     $this->setFormTitle();
-		$this->registerRule('emailList', 'callback', 'emailList', 'CRM_Utils_Rule');
+    $this->registerRule('emailList', 'callback', 'emailList', 'CRM_Utils_Rule');
     $this->add('hidden', 'rule_action_id');
     $this->add('text', 'from_name', ts('From Name'), TRUE);
     $this->add('text', 'from_email', ts('From Email'), TRUE);
@@ -117,9 +115,9 @@ class CRM_Emailapi_Form_CivirulesAction_Send extends CRM_Core_Form {
     $this->add('checkbox','alternative_receiver', ts('Send to Alternative Email Address'));
     $this->add('text', 'alternative_receiver_address', ts('Alternative Email Address'));
     $this->addRule("alternative_receiver_address", ts('Email is not valid.'), 'email');
-		$this->add('text', 'cc', ts('Cc to'));
+    $this->add('text', 'cc', ts('Cc to'));
     $this->addRule("cc", ts('Email is not valid.'), 'emailList');
-		$this->add('text', 'bcc', ts('Bcc to'));
+    $this->add('text', 'bcc', ts('Bcc to'));
     $this->addRule("bcc", ts('Email is not valid.'), 'emailList');
     $this->add('select', 'template_id', ts('Message Template'), $this->getMessageTemplates(), TRUE);
     $this->add('select', 'location_type_id', ts('Location Type (if you do not want primary e-mail address)'), $this->getLocationTypes(), FALSE);
@@ -128,9 +126,10 @@ class CRM_Emailapi_Form_CivirulesAction_Send extends CRM_Core_Form {
     }
     $this->assign('has_case', $this->hasCase);
     // add buttons
-    $this->addButtons(array(
-      array('type' => 'next', 'name' => ts('Save'), 'isDefault' => TRUE,),
-      array('type' => 'cancel', 'name' => ts('Cancel'))));
+    $this->addButtons([
+      ['type' => 'next', 'name' => ts('Save'), 'isDefault' => TRUE,],
+      ['type' => 'cancel', 'name' => ts('Cancel')]
+    ]);
   }
 
   /**
@@ -140,8 +139,8 @@ class CRM_Emailapi_Form_CivirulesAction_Send extends CRM_Core_Form {
    * @access public
    */
   public function setDefaultValues() {
-    $data = array();
-    $defaultValues = array();
+    $data = [];
+    $defaultValues = [];
     $defaultValues['rule_action_id'] = $this->ruleActionId;
     if (!empty($this->ruleAction->action_params)) {
       $data = unserialize($this->ruleAction->action_params);
@@ -162,10 +161,10 @@ class CRM_Emailapi_Form_CivirulesAction_Send extends CRM_Core_Form {
       $defaultValues['alternative_receiver_address'] = $data['alternative_receiver_address'];
       $defaultValues['alternative_receiver'] = TRUE;
     }
-		if (!empty($data['cc'])) {
+    if (!empty($data['cc'])) {
       $defaultValues['cc'] = $data['cc'];
     }
-		if (!empty($data['bcc'])) {
+    if (!empty($data['bcc'])) {
       $defaultValues['bcc'] = $data['bcc'];
     }
     $defaultValues['file_on_case'] = FALSE;
@@ -194,11 +193,11 @@ class CRM_Emailapi_Form_CivirulesAction_Send extends CRM_Core_Form {
         $data['alternative_receiver_address'] = $this->_submitValues['alternative_receiver_address'];
       }
     }
-		$data['cc'] = '';
+    $data['cc'] = '';
     if (!empty($this->_submitValues['cc'])) {
       $data['cc'] = $this->_submitValues['cc'];
     }
-		$data['bcc'] = '';
+    $data['bcc'] = '';
     if (!empty($this->_submitValues['bcc'])) {
       $data['bcc'] = $this->_submitValues['bcc'];
     }
