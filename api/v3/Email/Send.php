@@ -168,7 +168,11 @@ function civicrm_api3_email_send($params) {
       $toName = $contact['display_name'];
     }
 
-    CRM_Utils_Hook::tokenValues($contact, $contact['contact_id'], NULL, $tokens);
+    // Change the contact array to the format the hook expects.
+    $contactHookArray[$contact['contact_id']] = $contact;
+    CRM_Utils_Hook::tokenValues($contactHookArray, array_keys($contactHookArray), NULL, $tokens);
+    // Now update the original array.
+    $contact = $contactHookArray[$contact['contact_id']];
     // call token hook
     $hookTokens = array();
     CRM_Utils_Hook::tokens($hookTokens);
