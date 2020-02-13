@@ -147,7 +147,7 @@ function civicrm_api3_email_send($params) {
        *
        */
       $toName = '';
-      $email = $alternativeEmailAddress;
+      $toEmail = $alternativeEmailAddress;
     } elseif ($contact['do_not_email'] || empty($contact['email']) || CRM_Utils_Array::value('is_deceased', $contact) || $contact['on_hold']) {
       /**
        * Contact is decaused or has opted out from mailings so do not send the e-mail
@@ -157,7 +157,7 @@ function civicrm_api3_email_send($params) {
       /**
        * Send e-mail to the contact
        */
-      $email = $contact['email'];
+      $toEmail = $contact['email'];
       $toName = $contact['display_name'];
     }
 
@@ -213,7 +213,7 @@ function civicrm_api3_email_send($params) {
       'groupName' => 'E-mail from API',
       'from' => $from,
       'toName' => $toName,
-      'toEmail' => $email,
+      'toEmail' => $toEmail,
       'subject' => $messageSubject,
       'messageTemplateID' => $messageTemplates->id,
     ];
@@ -233,7 +233,7 @@ function civicrm_api3_email_send($params) {
     }
     $result = CRM_Utils_Mail::send($mailParams);
     if (!$result) {
-      throw new API_Exception('Error sending e-mail to ' . $contact['display_name'] . ' <' . $email . '> ');
+      throw new API_Exception('Error sending e-mail to ' . $contact['display_name'] . ' <' . $toEmail . '> ');
     }
 
     //create activity for sending e-mail.
@@ -278,7 +278,7 @@ function civicrm_api3_email_send($params) {
     $returnValues[$contactId] = [
       'contact_id' => $contactId,
       'send' => 1,
-      'status_msg' => "Successfully send e-mail to {$email}",
+      'status_msg' => "Successfully sent e-mail to {$toEmail}",
     ];
   }
 
