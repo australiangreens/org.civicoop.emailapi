@@ -52,45 +52,45 @@ class CRM_Emailapi_CivirulesAction_SendToRelatedContact extends CRM_Civirules_Ac
         $dao = CRM_Core_DAO::executeQuery("
             SELECT contact_id_{$dir} AS contact_id
             FROM civicrm_relationship r
-            INNER JOIN civicrm_contact c ON c.id = r.contact_id_{$dir} 
+            INNER JOIN civicrm_contact c ON c.id = r.contact_id_{$dir}
             WHERE contact_id_{$inverse_dir} = %1 AND relationship_type_id = %2 AND is_active = 1 AND (start_date IS NULL OR start_date <= CURRENT_DATE()) AND (end_date IS NULL OR end_date >= CURRENT_DATE())
             AND c.is_deleted = 0
-        ", array(
-          1 => array($contact_id, 'Integer'),
-          2 => array($relationship_type_id, 'Integer'),
-        ));
+        ", [
+          1 => [$contact_id, 'Integer'],
+          2 => [$relationship_type_id, 'Integer'],
+        ]);
         break;
       case 'recent_active':
         $dao = CRM_Core_DAO::executeQuery("
-            SELECT contact_id_{$dir} as contact_id, r.id, start_date, (CASE WHEN r.start_date IS NULL THEN 1 ELSE 0 END) AS start_date_not_null 
+            SELECT contact_id_{$dir} as contact_id, r.id, start_date, (CASE WHEN r.start_date IS NULL THEN 1 ELSE 0 END) AS start_date_not_null
             FROM civicrm_relationship r
-            INNER JOIN civicrm_contact c ON c.id = r.contact_id_{$dir} 
+            INNER JOIN civicrm_contact c ON c.id = r.contact_id_{$dir}
             WHERE contact_id_{$inverse_dir} = %1 AND relationship_type_id = %2 AND is_active = 1 AND (start_date IS NULL OR start_date <= CURRENT_DATE()) AND (end_date IS NULL OR end_date >= CURRENT_DATE())
             AND c.is_deleted = 0
-            ORDER BY start_date_not_null, r.start_date DESC, r.id DESC 
+            ORDER BY start_date_not_null, r.start_date DESC, r.id DESC
             LIMIT 0, 1
-        ", array(
-          1 => array($contact_id, 'Integer'),
-          2 => array($relationship_type_id, 'Integer'),
-        ));
+        ", [
+          1 => [$contact_id, 'Integer'],
+          2 => [$relationship_type_id, 'Integer'],
+        ]);
         break;
       case 'recent_inactive':
         $dao = CRM_Core_DAO::executeQuery("
-            SELECT contact_id_{$dir} as contact_id, r.id, end_date, (CASE WHEN r.end_date IS NULL THEN 1 ELSE 0 END) AS end_date_not_null 
+            SELECT contact_id_{$dir} as contact_id, r.id, end_date, (CASE WHEN r.end_date IS NULL THEN 1 ELSE 0 END) AS end_date_not_null
             FROM civicrm_relationship r
-            INNER JOIN civicrm_contact c ON c.id = r.contact_id_{$dir} 
+            INNER JOIN civicrm_contact c ON c.id = r.contact_id_{$dir}
             WHERE contact_id_{$inverse_dir} = %1 AND relationship_type_id = %2 AND is_active = 0
             AND c.is_deleted = 0
-            ORDER BY end_date_not_null, r.end_date DESC, r.id DESC 
+            ORDER BY end_date_not_null, r.end_date DESC, r.id DESC
             LIMIT 0, 1
-        ", array(
-          1 => array($contact_id, 'Integer'),
-          2 => array($relationship_type_id, 'Integer'),
-        ));
+        ", [
+          1 => [$contact_id, 'Integer'],
+          2 => [$relationship_type_id, 'Integer'],
+        ]);
         break;
     }
 
-    $contacts = array();
+    $contacts = [];
     if ($dao) {
       while($dao->fetch()) {
         if (!in_array($dao->contact_id, $contacts)) {
@@ -113,12 +113,12 @@ class CRM_Emailapi_CivirulesAction_SendToRelatedContact extends CRM_Civirules_Ac
   private function checkAlternativeAddress($actionParameters, $contactId) {
     if (isset($actionParameters['location_type_id']) && !empty($actionParameters['location_type_id'])) {
       try {
-        $alternateAddress = civicrm_api3('Email', 'getvalue', array(
+        $alternateAddress = civicrm_api3('Email', 'getvalue', [
           'return' => 'email',
           'contact_id' => $contactId,
           'location_type_id' => $actionParameters['location_type_id'],
-          'options' => array('limit' => 1, 'sort' => 'id DESC'),
-        ));
+          'options' => ['limit' => 1, 'sort' => 'id DESC'],
+        ]);
         return (string) $alternateAddress;
       }
       catch (CiviCRM_API3_Exception $ex) {
@@ -128,16 +128,16 @@ class CRM_Emailapi_CivirulesAction_SendToRelatedContact extends CRM_Civirules_Ac
   }
 
   public static function getRelationshipOptions() {
-    return array(
+    return [
       'all_active' => ts('All active related contacts'),
       'recent_active' => ts('The most recent active related contact'),
       'recent_inactive' => ts('The most recent inactive related contact'),
-    );
+    ];
   }
 
   public static function getRelationshipTypes($dir='both') {
-    $return = array();
-    $relationshipTypes = civicrm_api3('RelationshipType', 'Get', array('is_active' => 1, 'options' => array('limit' => 0)));
+    $return = [];
+    $relationshipTypes = civicrm_api3('RelationshipType', 'Get', ['is_active' => 1, 'options' => ['limit' => 0]]);
     foreach ($relationshipTypes['values'] as $relationshipType) {
       switch($dir) {
         case 'a_b':
@@ -180,12 +180,7 @@ class CRM_Emailapi_CivirulesAction_SendToRelatedContact extends CRM_Civirules_Ac
     $template = 'unknown template';
     $params = $this->getActionParameters();
     $version = CRM_Core_BAO_Domain::version();
-    // Compatibility with CiviCRM > 4.3
-    if($version >= 4.4) {
-      $messageTemplates = new CRM_Core_DAO_MessageTemplate();
-    } else {
-      $messageTemplates = new CRM_Core_DAO_MessageTemplates();
-    }
+    $messageTemplates = new CRM_Core_DAO_MessageTemplate();
     $messageTemplates->id = $params['template_id'];
     $messageTemplates->is_active = true;
     if ($messageTemplates->find(TRUE)) {
@@ -193,10 +188,10 @@ class CRM_Emailapi_CivirulesAction_SendToRelatedContact extends CRM_Civirules_Ac
     }
     if (isset($params['location_type_id']) && !empty($params['location_type_id'])) {
       try {
-        $locationText = 'location type ' . civicrm_api3('LocationType', 'getvalue', array(
+        $locationText = 'location type ' . civicrm_api3('LocationType', 'getvalue', [
             'return' => 'display_name',
             'id' => $params['location_type_id'],
-          )) . ' with primary e-mailaddress as fall back';
+          ]) . ' with primary e-mailaddress as fall back';
       }
       catch (CiviCRM_API3_Exception $ex) {
         $locationText = 'location type ' . $params['location_type_id'];
@@ -217,13 +212,13 @@ class CRM_Emailapi_CivirulesAction_SendToRelatedContact extends CRM_Civirules_Ac
 
     $cc = "";
     if (!empty($params['cc'])) {
-      $cc = ts(' and cc to %1', array(1=>$params['cc']));
+      $cc = ts(' and cc to %1', [1=>$params['cc']]);
     }
     $bcc = "";
     if (!empty($params['bcc'])) {
-      $bcc = ts(' and bcc to %1', array(1=>$params['bcc']));
+      $bcc = ts(' and bcc to %1', [1=>$params['bcc']]);
     }
-    return ts('Send e-mail from "%1 (%2 using %3)" with Template "%4" to %5 %6 %7', array(
+    return ts('Send e-mail from "%1 (%2 using %3)" with Template "%4" to %5 %6 %7', [
       1=>$params['from_name'],
       2=>$params['from_email'],
       3=>$locationText,
@@ -231,6 +226,6 @@ class CRM_Emailapi_CivirulesAction_SendToRelatedContact extends CRM_Civirules_Ac
       5 => $to,
       6 => $cc,
       7 => $bcc
-    ));
+    ]);
   }
 }

@@ -1,5 +1,5 @@
 Package: org.civicoop.emailapi
-Copyright (C) 2015, Jaap Jansma - CiviCooP <helpdesk@civicoop.org>
+Copyright (C) 2020, Jaap Jansma - CiviCooP <helpdesk@civicoop.org>
 Licensed under the GNU Affero Public License 3.0 (below).
 
 -------------------------------------------------------------------------------
