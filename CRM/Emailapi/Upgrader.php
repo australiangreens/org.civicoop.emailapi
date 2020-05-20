@@ -13,7 +13,8 @@ class CRM_Emailapi_Upgrader extends CRM_Emailapi_Upgrader_Base {
    * Install CiviRule Action Send E-mail
    */
   public function install() {
-    if(civicrm_api3('Extension', 'get', ['full_name' => 'org.civicoop.civirules', 'status' => 'installed'])['count']){
+    // if extension CiviRules installed, add action send email
+    if (civicrm_api3('Extension', 'get', ['full_name' => 'org.civicoop.civirules', 'status' => 'installed'])['count']){
       $this->executeSqlFile('sql/insertSendEmailAction.sql');
     }
   }
