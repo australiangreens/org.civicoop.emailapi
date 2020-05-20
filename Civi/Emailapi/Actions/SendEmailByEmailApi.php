@@ -25,7 +25,9 @@ class SendEmailByEmailApi extends AbstractAction {
    */
   public function getParameterSpecification() {
     return new SpecificationBag([
-      new Specification('contact_id', 'Integer', E::ts('Contact ID'), TRUE)
+      new Specification("contact_id", "Integer", E::ts("Contact ID"), TRUE),
+      new Specification("case_id", "Integer", E::ts("File Email Activity on Case ID"), FALSE),
+      new Specification("contribution_id", "Integer", E::ts("Contribution ID for contribution tokens"), FALSE),
     ]);
   }
 
@@ -39,8 +41,6 @@ class SendEmailByEmailApi extends AbstractAction {
       new Specification("bcc", "String", E::ts("Send blind copy to email address (bcc) "), FALSE),
       new Specification("subject", "String", E::ts("Email Subject"), FALSE),
       new Specification("alternate_receiver_address", "String", E::ts("Send to THIS Email Address (and not the primary one of the contact)"), FALSE),
-      new Specification("case_id", "Integer", E::ts("File Email Activity on Case with ID"), FALSE),
-      new Specification("contribution_id", "Integer", E::ts("Use Contribution with this ID for the contribution tokens in the Email"), FALSE),
     ]);
   }
 
@@ -64,7 +64,7 @@ class SendEmailByEmailApi extends AbstractAction {
     $contactId = (int) $parameters->getParameter('contact_id');
     if ($contactId) {
       try {
-        $result = civicrm_api3('Email', 'send', $this->collectEmailParams($contactId));
+        $result = civicrm_api3('Email', 'send', $this->collectEmailParams($parameters));
         $outputFields = ['contact_id', 'send', 'status_msg'];
         foreach ($outputFields as $outputField) {
           if ($result[$outputField]) {
@@ -88,16 +88,23 @@ class SendEmailByEmailApi extends AbstractAction {
    * @param int $contactId
    * @return array
    */
-  private function collectEmailParams($contactId) {
+  private function collectEmailParams(ParameterBagInterface $parameters) {
     $emailParams = [
-      'contact_id' => $contactId,
+      'contact_id' => (int) $parameters->getParameter('contact_id'),
       'template_id' => (int) $this->configuration->getParameter('template_id'),
     ];
-    $parameters = ['cc', 'bcc', 'alternate_receiver_address', 'subject', 'case_id', 'contribution_id'];
-    foreach ($parameters as $parameter) {
-      $value = $this->configuration->getParameter($parameter);
+    $configParams = ['cc', 'bcc', 'alternate_receiver_address', 'subject'];
+    foreach ($configParams as $configParam) {
+      $value = $this->configuration->getParameter($configParam);
       if ($value && !empty($value)) {
-        $emailParams[$parameter] = $value;
+        $emailParams[$configParam] = $value;
+      }
+    }
+    $otherParams = ['case_id', 'contribution_id'];
+    foreach ($otherParams as $otherParam) {
+      $value = $parameters->getParameter($otherParam);
+      if ($value && !empty($value)) {
+        $emailParams[$otherParam] = $value;
       }
     }
     return $emailParams;
