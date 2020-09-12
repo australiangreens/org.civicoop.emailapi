@@ -22,6 +22,10 @@ function _civicrm_api3_email_send_spec(&$spec) {
     'title' => 'Case ID',
     'type' => CRM_Utils_Type::T_INT,
   ];
+  $spec['activity_id'] = [
+    'title' => 'Activity ID',
+    'type' => CRM_Utils_Type::T_INT,
+  ];
   $spec['contribution_id'] = [
     'title' => 'Contribution ID',
     'type' => CRM_Utils_Type::T_INT,
@@ -74,6 +78,10 @@ function civicrm_api3_email_send($params) {
   }
   elseif (!empty($params['extra_data']['contribution'])) {
     $contribution_id = $params['extra_data']['contribution']['contribution_id'];
+  }
+  $activity_id = false;
+  if (isset($params['activity_id'])) {
+    $activity_id = $params['activity_id'];
   }
   $extra_data = false;
   if (isset($params['extra_data'])) {
@@ -190,6 +198,10 @@ function civicrm_api3_email_send($params) {
         $$bodyType = CRM_Utils_Token::replaceComponentTokens($$bodyType, $contact, $tokens, TRUE);
         if ($case_id) {
           $$bodyType = CRM_Utils_Token::replaceCaseTokens($case_id, $$bodyType, $tokens);
+        }
+        if ($activity_id && !empty($tokens['activity'])) {
+          $activity = civicrm_api3('Activity', 'getsingle', ['id' => $activity_id]);
+          $$bodyType = CRM_Utils_Token::replaceEntityTokens('activity', $activity, $$bodyType, $tokens);
         }
         $$bodyType = CRM_Utils_Token::replaceHookTokens($$bodyType, $contact, $categories, TRUE);
         CRM_Utils_Token::replaceGreetingTokens($$bodyType, $contact, $contact['contact_id']);

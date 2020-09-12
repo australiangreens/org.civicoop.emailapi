@@ -49,6 +49,10 @@ class CRM_Emailapi_CivirulesAction_Send extends CRM_CivirulesActions_Generic_Api
       $case = $triggerData->getEntityData('Case');
       $parameters['case_id'] = $case['id'];
     }
+    if ($triggerData->getEntityData('Activity')) {
+      $activity = $triggerData->getEntityData('Activity');
+      $parameters['activity_id'] = $activity['id'];
+    }
     if (!empty($actionParameters['cc'])) {
       $parameters['cc'] = $actionParameters['cc'];
     }
