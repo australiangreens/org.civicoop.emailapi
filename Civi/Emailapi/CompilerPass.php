@@ -8,7 +8,7 @@ namespace Civi\Emailapi;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
-use CRM_Aivlspecificactions_ExtensionUtil as E;
+use CRM_Emailapi_ExtensionUtil as E;
 
 class CompilerPass implements CompilerPassInterface {
 
