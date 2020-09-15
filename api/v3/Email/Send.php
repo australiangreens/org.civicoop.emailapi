@@ -82,6 +82,8 @@ function civicrm_api3_email_send($params) {
   $activity_id = false;
   if (isset($params['activity_id'])) {
     $activity_id = $params['activity_id'];
+  } elseif (isset($params['extra_data']['activity'])) {
+    $activity_id = $params['extra_data']['activity']['id'];
   }
   $extra_data = false;
   if (isset($params['extra_data'])) {
