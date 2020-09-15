@@ -121,7 +121,7 @@ function civicrm_api3_email_send($params) {
   $returnValues = [];
   foreach($contactIds as $contactId) {
     $contact_params = [['contact_id', '=', $contactId, 0, 0]];
-    list($contact, $_) = CRM_Contact_BAO_Query::apiQuery($contact_params);
+    list($contact, $_) = CRM_Contact_BAO_Query::apiQuery($contact_params, NULL, NULL, NULL, 0, 25, TRUE, FALSE, TRUE, 1, NULL, TRUE);
 
     //CRM-4524
     $contact = reset($contact);
