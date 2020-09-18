@@ -136,19 +136,19 @@ class CRM_Emailapi_CivirulesAction_Send extends CRM_CivirulesActions_Generic_Api
     else {
       $locationText = "primary e-mailaddress";
     }
-    $to = ts('the contact');
+    $to = E::ts('the contact');
     if (!empty($params['alternative_receiver_address'])) {
       $to = $params['alternative_receiver_address'];
     }
     $cc = "";
     if (!empty($params['cc'])) {
-      $cc = ts(' and cc to %1', [1=>$params['cc']]);
+      $cc = E::ts(' and cc to %1', [1=>$params['cc']]);
     }
     $bcc = "";
     if (!empty($params['bcc'])) {
-      $bcc = ts(' and bcc to %1', [1=>$params['bcc']]);
+      $bcc = E::ts(' and bcc to %1', [1=>$params['bcc']]);
     }
-    return ts('Send e-mail from "%1 (%2 using %3)" with Template "%4" to %5 %6 %7', [
+    return E::ts('Send e-mail from "%1 (%2 using %3)" with Template "%4" to %5 %6 %7', [
       1=>$params['from_name'],
       2=>$params['from_email'],
       3=>$locationText,
