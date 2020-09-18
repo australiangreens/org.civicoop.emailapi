@@ -1,3 +1,4 @@
+{crmScope key='org.civicoop.emailapi'}
 <h3>{$ruleActionHeader}</h3>
 <div class="crm-block crm-form-block crm-civirule-rule_action-block-email-send">
   <div class="help-block" id="help">
@@ -77,3 +78,4 @@
   }
   </script>
 {/literal}
+{/crmScope}
