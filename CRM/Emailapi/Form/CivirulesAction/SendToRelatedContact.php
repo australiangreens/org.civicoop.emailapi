@@ -71,7 +71,7 @@ class CRM_Emailapi_Form_CivirulesAction_SendToRelatedContact extends CRM_Core_Fo
    */
 
   protected function getLocationTypes() {
-    $return = ['' => ts('-- please select --')];
+    $return = ['' => E::ts('-- please select --')];
     try {
       $locationTypes = civicrm_api3('LocationType', 'get', [
         'return' => ["id", "display_name"],
@@ -92,16 +92,16 @@ class CRM_Emailapi_Form_CivirulesAction_SendToRelatedContact extends CRM_Core_Fo
     $this->setFormTitle();
     $this->registerRule('emailList', 'callback', 'emailList', 'CRM_Utils_Rule');
     $this->add('hidden', 'rule_action_id');
-    $this->add('text', 'from_name', ts('From Name'), TRUE);
-    $this->add('text', 'from_email', ts('From Email'), TRUE);
-    $this->addRule("from_email", ts('Email is not valid.'), 'email');
-    $this->add('select', 'relationship_type', ts('Relationship Type'), $this->getRelationshipTypes(), TRUE);
-    $this->add('select', 'relationship_option', ts('Send e-mail to'), $this->getRelatedOptions(), TRUE);
-    $this->add('text', 'cc', ts('Cc to'));
-    $this->addRule("cc", ts('Email is not valid.'), 'emailList');
-    $this->add('text', 'bcc', ts('Bcc to'));
-    $this->addRule("bcc", ts('Email is not valid.'), 'emailList');
-    $this->addEntityRef('template_id', ts('Message Template'),[
+    $this->add('text', 'from_name', E::ts('From Name'), TRUE);
+    $this->add('text', 'from_email', E::ts('From Email'), TRUE);
+    $this->addRule("from_email", E::ts('Email is not valid.'), 'email');
+    $this->add('select', 'relationship_type', E::ts('Relationship Type'), $this->getRelationshipTypes(), TRUE);
+    $this->add('select', 'relationship_option', E::ts('Send e-mail to'), $this->getRelatedOptions(), TRUE);
+    $this->add('text', 'cc', E::ts('Cc to'));
+    $this->addRule("cc", E::ts('Email is not valid.'), 'emailList');
+    $this->add('text', 'bcc', E::ts('Bcc to'));
+    $this->addRule("bcc", E::ts('Email is not valid.'), 'emailList');
+    $this->addEntityRef('template_id', E::ts('Message Template'),[
       'entity' => 'MessageTemplate',
       'api' => [
         'label_field' => 'msg_title',
@@ -111,17 +111,17 @@ class CRM_Emailapi_Form_CivirulesAction_SendToRelatedContact extends CRM_Core_Fo
           'workflow_id' => ['IS NULL' => 1],
         ]
       ],
-      'placeholder' => ts(' - select - '),
+      'placeholder' => E::ts(' - select - '),
     ], TRUE);
-    $this->add('select', 'location_type_id', ts('Location Type (if you do not want primary e-mail address)'), $this->getLocationTypes(), FALSE);
+    $this->add('select', 'location_type_id', E::ts('Location Type (if you do not want primary e-mail address)'), $this->getLocationTypes(), FALSE);
     if ($this->hasCase) {
-      $this->add('checkbox','file_on_case', ts('File Email on Case'));
+      $this->add('checkbox','file_on_case', E::ts('File Email on Case'));
     }
     $this->assign('has_case', $this->hasCase);
     // add buttons
     $this->addButtons([
-      ['type' => 'next', 'name' => ts('Save'), 'isDefault' => TRUE,],
-      ['type' => 'cancel', 'name' => ts('Cancel')]
+      ['type' => 'next', 'name' => E::ts('Save'), 'isDefault' => TRUE,],
+      ['type' => 'cancel', 'name' => E::ts('Cancel')]
     ]);
   }
 
