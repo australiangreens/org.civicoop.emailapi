@@ -1,4 +1,6 @@
 <?php
+
+use CRM_Emailapi_ExtensionUtil as E;
 /**
  * Class for CiviRule Condition Emailapi
  *

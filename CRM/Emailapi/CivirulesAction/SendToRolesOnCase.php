@@ -3,6 +3,7 @@
  * @author Jaap Jansma <jaap.jansma@civicoop.org>
  * @license AGPL-3.0
  */
+use CRM_Emailapi_ExtensionUtil as E;
 
 class CRM_Emailapi_CivirulesAction_SendToRolesOnCase extends CRM_Civirules_Action {
 

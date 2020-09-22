@@ -1,4 +1,6 @@
 <?php
+
+use CRM_Emailapi_ExtensionUtil as E;
 /**
  * @author Jaap Jansma <jaap.jansma@civicoop.org>
  * @license AGPL-3.0

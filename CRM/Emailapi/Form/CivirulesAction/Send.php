@@ -1,5 +1,6 @@
 <?php
 
+use CRM_Emailapi_ExtensionUtil as E;
 /**
  * Form controller class
  *
