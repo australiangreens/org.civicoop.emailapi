@@ -42,6 +42,13 @@ function emailapi_civicrm_install() {
 }
 
 /**
+ * Implementation of hook_civicrm_postInstall
+ */
+function emailapi_civicrm_postInstall() {
+  _emailapi_civix_civicrm_postInstall();
+}
+
+/**
  * Implementation of hook_civicrm_uninstall
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_uninstall
