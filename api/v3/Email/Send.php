@@ -68,28 +68,6 @@ function civicrm_api3_email_send($params) {
   $contactIds = explode(",", $params['contact_id']);
   $alternativeEmailAddress = !empty($params['alternative_receiver_address']) ? $params['alternative_receiver_address'] : false;
 
-  $case_id = false;
-  if (isset($params['case_id'])) {
-    $case_id = $params['case_id'];
-  }
-  $contribution_id = false;
-  if (isset($params['contribution_id'])) {
-    $contribution_id = $params['contribution_id'];
-  }
-  elseif (!empty($params['extra_data']['contribution'])) {
-    $contribution_id = $params['extra_data']['contribution']['contribution_id'];
-  }
-  $activity_id = false;
-  if (isset($params['activity_id'])) {
-    $activity_id = $params['activity_id'];
-  } elseif (isset($params['extra_data']['activity'])) {
-    $activity_id = $params['extra_data']['activity']['id'];
-  }
-  $extra_data = false;
-  if (isset($params['extra_data'])) {
-    $extra_data = $params['extra_data'];
-  }
-
   $messageTemplates = new CRM_Core_DAO_MessageTemplate();
   $messageTemplates->id = $params['template_id'];
 
@@ -100,9 +78,6 @@ function civicrm_api3_email_send($params) {
   } elseif (isset($params['from_email']) || isset($params['from_name'])) {
     throw new API_Exception('You have to provide both from_name and from_email');
   }
-
-  $domain     = CRM_Core_BAO_Domain::getDomain();
-  $result     = NULL;
 
   if (!$messageTemplates->find(TRUE)) {
     throw new API_Exception('Could not find template with ID: '.$params['template_id']);
@@ -124,29 +99,28 @@ function civicrm_api3_email_send($params) {
   foreach($contactIds as $contactId) {
     $contact_params = [['contact_id', '=', $contactId, 0, 0]];
     list($contact, $_) = CRM_Contact_BAO_Query::apiQuery($contact_params, NULL, NULL, NULL, 0, 25, TRUE, FALSE, TRUE, 1, NULL, TRUE);
-
-    //CRM-4524
     $contact = reset($contact);
-
     if (!$contact || is_a($contact, 'CRM_Core_Error')) {
       throw new API_Exception('Could not find contact with ID: ' . $contact_params['contact_id']);
     }
 
-    //CRM-5734
-
-    // get tokens to be replaced
-    $tokens = array_merge_recursive(CRM_Utils_Token::getTokens($body_text),
-      CRM_Utils_Token::getTokens($body_html),
-      CRM_Utils_Token::getTokens($messageSubject));
-
-    if ($case_id) {
-      $contact['case.id'] = $case_id;
+    if (isset($params['case_id'])) {
+      $contact['case.id'] = $params['case_id'];
     }
-    if ($contribution_id) {
-      $contact['contribution_id'] = $contribution_id;
+    if (isset($params['contribution_id'])) {
+      $contact['contribution_id'] = $params['contribution_id'];
     }
-    if ($extra_data) {
-      $contact['extra_data'] = $extra_data;
+    elseif (!empty($params['extra_data']['contribution'])) {
+      $contact['contribution_id'] = $params['extra_data']['contribution']['contribution_id'];
+    }
+    if (isset($params['extra_data'])) {
+      $contact['extra_data'] = $params['extra_data'];
+    }
+    $activity_id = false;
+    if (isset($params['activity_id'])) {
+      $contact['activity_id'] = $params['activity_id'];
+    } elseif (isset($params['extra_data']['activity'])) {
+      $contact['activity_id'] = $params['extra_data']['activity']['id'];
     }
 
     if ($alternativeEmailAddress) {
@@ -171,42 +145,12 @@ function civicrm_api3_email_send($params) {
       $toName = $contact['display_name'];
     }
 
-    // Change the contact array to the format the hook expects.
-    $contactHookArray[$contact['contact_id']] = $contact;
-    CRM_Utils_Hook::tokenValues($contactHookArray, array_keys($contactHookArray), NULL, $tokens);
-    // Now update the original array.
-    $contact = $contactHookArray[$contact['contact_id']];
-    // call token hook
-    $hookTokens = [];
-    CRM_Utils_Hook::tokens($hookTokens);
-    $categories = array_keys($hookTokens);
-
     // do replacements in text and html body
     $type = ['html', 'text'];
     foreach ($type as $key => $value) {
       $bodyType = "body_{$value}";
       if ($$bodyType) {
-        if ($contribution_id) {
-          try {
-            $contribution = civicrm_api3('Contribution', 'getsingle', ['id' => $contribution_id]);
-            $$bodyType = CRM_Utils_Token::replaceContributionTokens($$bodyType, $contribution, TRUE, $tokens);
-          } catch (Exception $e) {
-            // Do nothing
-          }
-        }
-
-        $$bodyType = CRM_Utils_Token::replaceDomainTokens($$bodyType, $domain, TRUE, $tokens, TRUE);
-        $$bodyType = CRM_Utils_Token::replaceContactTokens($$bodyType, $contact, FALSE, $tokens, FALSE, TRUE);
-        $$bodyType = CRM_Utils_Token::replaceComponentTokens($$bodyType, $contact, $tokens, TRUE);
-        if ($case_id) {
-          $$bodyType = CRM_Utils_Token::replaceCaseTokens($case_id, $$bodyType, $tokens);
-        }
-        if ($activity_id && !empty($tokens['activity'])) {
-          $activity = civicrm_api3('Activity', 'getsingle', ['id' => $activity_id]);
-          $$bodyType = CRM_Utils_Token::replaceEntityTokens('activity', $activity, $$bodyType, $tokens);
-        }
-        $$bodyType = CRM_Utils_Token::replaceHookTokens($$bodyType, $contact, $categories, TRUE);
-        CRM_Utils_Token::replaceGreetingTokens($$bodyType, $contact, $contact['contact_id']);
+        $$bodyType = CRM_Emailapi_Utils_Tokens::replaceTokens($contactId, $$bodyType, $contact);
       }
     }
     $html = $body_html;
@@ -219,15 +163,7 @@ function civicrm_api3_email_send($params) {
     }
 
     // do replacements in message subject
-    $messageSubject = CRM_Utils_Token::replaceContactTokens($messageSubject, $contact, false, $tokens);
-    $messageSubject = CRM_Utils_Token::replaceDomainTokens($messageSubject, $domain, true, $tokens);
-    $messageSubject = CRM_Utils_Token::replaceComponentTokens($messageSubject, $contact, $tokens, true);
-    if ($case_id) {
-      $messageSubject = CRM_Utils_Token::replaceCaseTokens($case_id, $messageSubject, $tokens);
-    }
-    $messageSubject = CRM_Utils_Token::replaceHookTokens($messageSubject, $contact, $categories, true);
-    CRM_Utils_Token::replaceGreetingTokens($messageSubject, $contact, $contact['contact_id']);
-
+    $messageSubject = CRM_Emailapi_Utils_Tokens::replaceTokens($contactId, $messageSubject, $contact);
     if (defined('CIVICRM_MAIL_SMARTY') && CIVICRM_MAIL_SMARTY) {
       $messageSubject = $smarty->fetch("string:{$messageSubject}");
     }
