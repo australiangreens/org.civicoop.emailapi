@@ -35,7 +35,7 @@
   <div class="crm-section">
     <div class="label">{$form.location_type_id.label}</div>
     <div class="content">{$form.location_type_id.html}</div>
-    <div class="content" id="location_note">{ts}Note: primary e-mailaddress will be used if location type e-mailaddress not found{/ts}</div>
+    <div class="content" id="location_note">{ts}Note: primary e-mail address will be used if location type e-mail address not found{/ts}</div>
     <div class="clear"></div>
   </div>
   <div class="crm-section hiddenElement alternative_receiver">

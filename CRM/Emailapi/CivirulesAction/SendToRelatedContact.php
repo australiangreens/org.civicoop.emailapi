@@ -28,7 +28,7 @@ class CRM_Emailapi_CivirulesAction_SendToRelatedContact extends CRM_Civirules_Ac
       $params = $actionParams;
       $params['contact_id'] = $related_contact_id;
 
-      // change e-mailaddress if other location type is used, falling back on primary if set
+      // change e-mail address if other location type is used, falling back on primary if set
       $alternativeAddress = $this->checkAlternativeAddress($params, $related_contact_id);
       if ($alternativeAddress) {
         $params['alternative_receiver_address'] = $alternativeAddress;
@@ -105,7 +105,7 @@ class CRM_Emailapi_CivirulesAction_SendToRelatedContact extends CRM_Civirules_Ac
 
   /**
    * Method to check if an alternative address is required. This is the case if:
-   * - the location type is set, then the e-mailaddress of the specific location type (if found) is to be used.
+   * - the location type is set, then the e-mail address of the specific location type (if found) is to be used.
    * - if alternative receiver address is set, that is to be used
    *
    * @param array $actionParameters
@@ -193,14 +193,14 @@ class CRM_Emailapi_CivirulesAction_SendToRelatedContact extends CRM_Civirules_Ac
         $locationText = 'location type ' . civicrm_api3('LocationType', 'getvalue', [
             'return' => 'display_name',
             'id' => $params['location_type_id'],
-          ]) . ' with primary e-mailaddress as fall back';
+          ]) . ' with primary e-mail address as fall back';
       }
       catch (CiviCRM_API3_Exception $ex) {
         $locationText = 'location type ' . $params['location_type_id'];
       }
     }
     else {
-      $locationText = "primary e-mailaddress";
+      $locationText = "primary e-mail address";
     }
     $to = '';
     $relationship_types = self::getRelationshipTypes();
