@@ -42,7 +42,7 @@ class CRM_Emailapi_CivirulesAction_Send extends CRM_CivirulesActions_Generic_Api
     $contactId = $triggerData->getContactId();
     $parameters['contact_id'] = $contactId;
     $actionParameters = $this->getActionParameters();
-    // change e-mailaddress if other location type is used, falling back on primary if set
+    // change e-mail address if other location type is used, falling back on primary if set
     $alternativeAddress = $this->checkAlternativeAddress($actionParameters, $contactId);
     if ($alternativeAddress) {
       $parameters['alternative_receiver_address'] = $alternativeAddress;
@@ -129,14 +129,14 @@ class CRM_Emailapi_CivirulesAction_Send extends CRM_CivirulesActions_Generic_Api
         $locationText = 'location type ' . civicrm_api3('LocationType', 'getvalue', [
             'return' => 'display_name',
             'id' => $params['location_type_id'],
-          ]) . ' with primary e-mailaddress as fall back';
+          ]) . ' with primary e-mail address as fall back';
       }
       catch (CiviCRM_API3_Exception $ex) {
         $locationText = 'location type ' . $params['location_type_id'];
       }
     }
     else {
-      $locationText = "primary e-mailaddress";
+      $locationText = "primary e-mail address";
     }
     $to = E::ts('the contact');
     if (!empty($params['alternative_receiver_address'])) {
