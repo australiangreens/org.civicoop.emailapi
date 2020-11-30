@@ -7,6 +7,7 @@ use CRM_Emailapi_ExtensionUtil as E;
  * @author Jaap Jansma (CiviCooP) <jaap.jansma@civicoop.org>
  * @license http://www.gnu.org/licenses/agpl-3.0.html
  */
+
 class CRM_Emailapi_CivirulesAction_Send extends CRM_CivirulesActions_Generic_Api {
 
   /**
@@ -63,6 +64,11 @@ class CRM_Emailapi_CivirulesAction_Send extends CRM_CivirulesActions_Generic_Api
     }
     $extra_data = (array) $triggerData;
     $parameters['extra_data'] = $extra_data["\0CRM_Civirules_TriggerData_TriggerData\0entity_data"];
+    foreach ($parameters['extra_data'] as $entity => $values) {
+      if (isset($values['id'])) {
+        $parameters["${entity}_id"] = $values['id'];
+      }
+    }
     return $parameters;
   }
 
