@@ -28,6 +28,11 @@
     <div class="clear"></div>
   </div>
   <div class="crm-section">
+    <div class="label">{$form.disable_smarty.label}</div>
+    <div class="content">{$form.disable_smarty.html}</div>
+    <div class="clear"></div>
+  </div>
+  <div class="crm-section">
     <div class="label">{$form.relationship_type.label}</div>
     <div class="content">{$form.relationship_type.html}</div>
     <div class="clear"></div>

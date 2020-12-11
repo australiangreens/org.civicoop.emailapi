@@ -109,6 +109,7 @@ class CRM_Emailapi_Form_CivirulesAction_SendToRolesOnCase extends CRM_Core_Form 
       ],
       'placeholder' => E::ts(' - select - ')
     ], TRUE);
+    $this->add('checkbox','disable_smarty', E::ts('Disable Smarty'));
     $this->add('select', 'location_type_id', E::ts('Location Type (if you do not want primary e-mail address)'), $this->getLocationTypes(), FALSE);
     // add buttons
     $this->addButtons([
@@ -145,6 +146,9 @@ class CRM_Emailapi_Form_CivirulesAction_SendToRolesOnCase extends CRM_Core_Form 
     if (!empty($data['location_type_id'])) {
       $defaultValues['location_type_id'] = $data['location_type_id'];
     }
+    if (!empty($data['disable_smarty'])) {
+      $defaultValues['disable_smarty'] = $data['disable_smarty'];
+    }
     if (!empty($data['cc'])) {
       $defaultValues['cc'] = $data['cc'];
     }
@@ -165,6 +169,7 @@ class CRM_Emailapi_Form_CivirulesAction_SendToRolesOnCase extends CRM_Core_Form 
     $data['relationship_type'] = $this->_submitValues['relationship_type'];
     $data['template_id'] = $this->_submitValues['template_id'];
     $data['location_type_id'] = $this->_submitValues['location_type_id'];
+    $data['disable_smarty'] = $this->_submitValues['disable_smarty'] ?? FALSE;
     $data['cc'] = '';
     if (!empty($this->_submitValues['cc'])) {
       $data['cc'] = $this->_submitValues['cc'];
