@@ -62,6 +62,9 @@ class CRM_Emailapi_CivirulesAction_Send extends CRM_CivirulesActions_Generic_Api
     if (!empty($actionParameters['bcc'])) {
       $parameters['bcc'] = $actionParameters['bcc'];
     }
+    if (!empty($actionParameters['disable_smarty'])) {
+      $parameters['disable_smarty'] = $actionParameters['disable_smarty'];
+    }
     $extra_data = (array) $triggerData;
     $parameters['extra_data'] = $extra_data["\0CRM_Civirules_TriggerData_TriggerData\0entity_data"];
     foreach ($parameters['extra_data'] as $entity => $values) {

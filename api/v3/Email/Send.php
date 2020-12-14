@@ -54,6 +54,13 @@ function _civicrm_api3_email_send_spec(&$spec) {
     'title' => 'Extra data',
     'type' => CRM_Utils_Type::T_TEXT,
   ];
+
+  // Copy from MessageTemplate.send API
+  $params['disable_smarty'] = [
+    'description' => 'Disable Smarty. Normal CiviMail tokens are still supported. By default Smarty is enabled if configured by CIVICRM_MAIL_SMARTY.' ,
+    'title' => 'Disable Smarty',
+    'type' => CRM_Utils_Type::T_BOOLEAN,
+  ];
 }
 
 /**
@@ -255,7 +262,9 @@ function _civicrm_api3_email_send_createTokenProcessor($params, $messageTemplate
     'schema' => array_values($activeEntityFields),
 
     // Whether to enable Smarty evaluation.
-    'smarty' => (defined('CIVICRM_MAIL_SMARTY') && CIVICRM_MAIL_SMARTY),
+    'smarty' => ($params['disable_smarty'] ?? FALSE)
+                ? FALSE
+                : (defined('CIVICRM_MAIL_SMARTY') && CIVICRM_MAIL_SMARTY),
   ]);
 
   // @todo do we need to call replaceComponentTokens when using tokenProcessor?

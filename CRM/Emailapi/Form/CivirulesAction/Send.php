@@ -107,6 +107,7 @@ class CRM_Emailapi_Form_CivirulesAction_Send extends CRM_Core_Form {
       ],
       'placeholder' => E::ts(' - select - ')
     ], TRUE);
+    $this->add('checkbox','disable_smarty', E::ts('Disable Smarty'));
     $this->add('select', 'location_type_id', E::ts('Location Type (if you do not want primary e-mail address)'), $this->getLocationTypes(), FALSE);
     if ($this->hasCase) {
       $this->add('checkbox','file_on_case', E::ts('File Email on Case'));
@@ -144,6 +145,9 @@ class CRM_Emailapi_Form_CivirulesAction_Send extends CRM_Core_Form {
     if (!empty($data['location_type_id'])) {
       $defaultValues['location_type_id'] = $data['location_type_id'];
     }
+    if (!empty($data['disable_smarty'])) {
+      $defaultValues['disable_smarty'] = $data['disable_smarty'];
+    }
     if (!empty($data['alternative_receiver_address'])) {
       $defaultValues['alternative_receiver_address'] = $data['alternative_receiver_address'];
       $defaultValues['alternative_receiver'] = TRUE;
@@ -170,6 +174,7 @@ class CRM_Emailapi_Form_CivirulesAction_Send extends CRM_Core_Form {
     $data['from_name'] = $this->_submitValues['from_name'];
     $data['from_email'] = $this->_submitValues['from_email'];
     $data['template_id'] = $this->_submitValues['template_id'];
+    $data['disable_smarty'] = $this->_submitValues['disable_smarty'] ?? FALSE;
     $data['location_type_id'] = $this->_submitValues['location_type_id'];
     if (!empty($this->_submitValues['location_type_id'])) {
       $data['alternative_receiver_address'] = '';
