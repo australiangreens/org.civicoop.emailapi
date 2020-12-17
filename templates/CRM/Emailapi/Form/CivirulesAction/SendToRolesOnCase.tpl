@@ -3,7 +3,7 @@
 <div class="crm-block crm-form-block crm-civirule-rule_action-block-email-send">
   <div class="help-block" id="help">
     {ts}<p>This is the form where you can set what is going to happen with the email.</p>
-    <p>The first few fields are relatively straightforward: the <strong>From Name</strong> is the name the email will be sent from and the <strong>From Email</strong> is the email address the email will be sent from.</p>
+    <p>The first few fields are relatively straightforward: the <strong>From Name</strong> is the name the email will be sent from and the <strong>From Email</strong> is the email address the email will be sent from. Leave these blank to use the configured defaults.</p>
     <p>The <strong>Message Template</strong> is where you select which CiviCRM message template will be used to compose the mail. You can create and edit them in <strong>Administer>Communications>Message Templates</strong></p>
     <p>The next section allows you to manipulate where the email will be sent to. By default it will be sent to all people with a role on the case. But you can restrict it by certain roles.<br/>
     By <strong>default</strong> the email will be sent to the <strong>primary email address of the contact</strong> in question.<br/>

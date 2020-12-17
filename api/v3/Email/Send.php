@@ -88,11 +88,15 @@ function civicrm_api3_email_send($params) {
   $messageTemplates = new CRM_Core_DAO_MessageTemplate();
   $messageTemplates->id = $params['template_id'];
 
-  $from = CRM_Core_BAO_Domain::getNameAndEmail();
-  $from = "$from[0] <$from[1]>";
-  if (isset($params['from_email']) && isset($params['from_name'])) {
-    $from = $params['from_name']."<".$params['from_email'].">";
-  } elseif (isset($params['from_email']) || isset($params['from_name'])) {
+  // From header defaults to site default.
+  list($defaultFromName, $defaultFromEmail) = CRM_Core_BAO_Domain::getNameAndEmail();
+  $from = "\"$defaultFromName\" <$defaultFromEmail>";
+
+  if (!empty($params['from_email']) && !empty($params['from_name'])) {
+    // If both an email and a name are provided, use those as the from header.
+    $from = '"' . $params['from_name'] . '" <' . $params['from_email'] . '>';
+  } elseif (!empty($params['from_email']) || !empty($params['from_name'])) {
+    // Why do we insist on this, instead of using the site default where the data is missing?
     throw new API_Exception('You have to provide both from_name and from_email');
   }
 
