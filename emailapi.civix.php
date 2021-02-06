@@ -7,9 +7,9 @@
  * extension.
  */
 class CRM_Emailapi_ExtensionUtil {
-  const SHORT_NAME = "emailapi";
-  const LONG_NAME = "org.civicoop.emailapi";
-  const CLASS_PREFIX = "CRM_Emailapi";
+  const SHORT_NAME = 'emailapi';
+  const LONG_NAME = 'org.civicoop.emailapi';
+  const CLASS_PREFIX = 'CRM_Emailapi';
 
   /**
    * Translate a string using the extension's domain.
