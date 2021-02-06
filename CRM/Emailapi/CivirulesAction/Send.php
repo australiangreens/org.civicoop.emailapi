@@ -1,10 +1,13 @@
 <?php
+
+use CRM_Emailapi_ExtensionUtil as E;
 /**
  * Class for CiviRule Condition Emailapi
  *
  * @author Jaap Jansma (CiviCooP) <jaap.jansma@civicoop.org>
  * @license http://www.gnu.org/licenses/agpl-3.0.html
  */
+
 class CRM_Emailapi_CivirulesAction_Send extends CRM_CivirulesActions_Generic_Api {
 
   /**
@@ -40,7 +43,7 @@ class CRM_Emailapi_CivirulesAction_Send extends CRM_CivirulesActions_Generic_Api
     $contactId = $triggerData->getContactId();
     $parameters['contact_id'] = $contactId;
     $actionParameters = $this->getActionParameters();
-    // change e-mailaddress if other location type is used, falling back on primary if set
+    // change e-mail address if other location type is used, falling back on primary if set
     $alternativeAddress = $this->checkAlternativeAddress($actionParameters, $contactId);
     if ($alternativeAddress) {
       $parameters['alternative_receiver_address'] = $alternativeAddress;
@@ -49,14 +52,26 @@ class CRM_Emailapi_CivirulesAction_Send extends CRM_CivirulesActions_Generic_Api
       $case = $triggerData->getEntityData('Case');
       $parameters['case_id'] = $case['id'];
     }
+    if ($triggerData->getEntityData('Activity')) {
+      $activity = $triggerData->getEntityData('Activity');
+      $parameters['activity_id'] = $activity['id'];
+    }
     if (!empty($actionParameters['cc'])) {
       $parameters['cc'] = $actionParameters['cc'];
     }
     if (!empty($actionParameters['bcc'])) {
       $parameters['bcc'] = $actionParameters['bcc'];
     }
+    if (!empty($actionParameters['disable_smarty'])) {
+      $parameters['disable_smarty'] = $actionParameters['disable_smarty'];
+    }
     $extra_data = (array) $triggerData;
     $parameters['extra_data'] = $extra_data["\0CRM_Civirules_TriggerData_TriggerData\0entity_data"];
+    foreach ($parameters['extra_data'] as $entity => $values) {
+      if (isset($values['id'])) {
+        $parameters["${entity}_id"] = $values['id'];
+      }
+    }
     return $parameters;
   }
 
@@ -123,28 +138,28 @@ class CRM_Emailapi_CivirulesAction_Send extends CRM_CivirulesActions_Generic_Api
         $locationText = 'location type ' . civicrm_api3('LocationType', 'getvalue', [
             'return' => 'display_name',
             'id' => $params['location_type_id'],
-          ]) . ' with primary e-mailaddress as fall back';
+          ]) . ' with primary e-mail address as fall back';
       }
       catch (CiviCRM_API3_Exception $ex) {
         $locationText = 'location type ' . $params['location_type_id'];
       }
     }
     else {
-      $locationText = "primary e-mailaddress";
+      $locationText = "primary e-mail address";
     }
-    $to = ts('the contact');
+    $to = E::ts('the contact');
     if (!empty($params['alternative_receiver_address'])) {
       $to = $params['alternative_receiver_address'];
     }
     $cc = "";
     if (!empty($params['cc'])) {
-      $cc = ts(' and cc to %1', [1=>$params['cc']]);
+      $cc = E::ts(' and cc to %1', [1=>$params['cc']]);
     }
     $bcc = "";
     if (!empty($params['bcc'])) {
-      $bcc = ts(' and bcc to %1', [1=>$params['bcc']]);
+      $bcc = E::ts(' and bcc to %1', [1=>$params['bcc']]);
     }
-    return ts('Send e-mail from "%1 (%2 using %3)" with Template "%4" to %5 %6 %7', [
+    return E::ts('Send e-mail from "%1 (%2 using %3)" with Template "%4" to %5 %6 %7', [
       1=>$params['from_name'],
       2=>$params['from_email'],
       3=>$locationText,

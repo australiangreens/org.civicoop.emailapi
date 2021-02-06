@@ -1,5 +1,6 @@
 <?php
 
+use CRM_Emailapi_ExtensionUtil as E;
 /**
  * Form controller class
  *
@@ -55,31 +56,6 @@ class CRM_Emailapi_Form_CivirulesAction_SendToRelatedContact extends CRM_Core_Fo
     parent::preProcess();
   }
 
-  /**
-   * Method to get message templates
-   *
-   * @return array
-   * @access protected
-   */
-
-  protected function getMessageTemplates() {
-    $return = ['' => ts('-- please select --')];
-    try {
-      $messageTemplates = civicrm_api3('MessageTemplate', 'get', [
-        'return' => ["id", "msg_title"],
-        'is_active' => 1,
-        'workflow_id' => ['IS NULL' => 1],
-        'options' => ['limit' => 0, 'sort' => "msg_title"],
-      ]);
-      foreach ($messageTemplates['values'] as $templateId => $template) {
-        $return[$templateId] = $template['msg_title'];
-      }
-    }
-    catch (CiviCRM_API3_Exception $ex) {
-    }
-    return $return;
-  }
-
   protected function getRelationshipTypes() {
     return CRM_Emailapi_CivirulesAction_SendToRelatedContact::getRelationshipTypes();
   }
@@ -96,7 +72,7 @@ class CRM_Emailapi_Form_CivirulesAction_SendToRelatedContact extends CRM_Core_Fo
    */
 
   protected function getLocationTypes() {
-    $return = ['' => ts('-- please select --')];
+    $return = ['' => E::ts('-- please select --')];
     try {
       $locationTypes = civicrm_api3('LocationType', 'get', [
         'return' => ["id", "display_name"],
@@ -117,25 +93,37 @@ class CRM_Emailapi_Form_CivirulesAction_SendToRelatedContact extends CRM_Core_Fo
     $this->setFormTitle();
     $this->registerRule('emailList', 'callback', 'emailList', 'CRM_Utils_Rule');
     $this->add('hidden', 'rule_action_id');
-    $this->add('text', 'from_name', ts('From Name'), TRUE);
-    $this->add('text', 'from_email', ts('From Email'), TRUE);
-    $this->addRule("from_email", ts('Email is not valid.'), 'email');
-    $this->add('select', 'relationship_type', ts('Relationship Type'), $this->getRelationshipTypes(), TRUE);
-    $this->add('select', 'relationship_option', ts('Send e-mail to'), $this->getRelatedOptions(), TRUE);
-    $this->add('text', 'cc', ts('Cc to'));
-    $this->addRule("cc", ts('Email is not valid.'), 'emailList');
-    $this->add('text', 'bcc', ts('Bcc to'));
-    $this->addRule("bcc", ts('Email is not valid.'), 'emailList');
-    $this->add('select', 'template_id', ts('Message Template'), $this->getMessageTemplates(), TRUE);
-    $this->add('select', 'location_type_id', ts('Location Type (if you do not want primary e-mail address)'), $this->getLocationTypes(), FALSE);
+    $this->add('text', 'from_name', E::ts('From Name'), TRUE);
+    $this->add('text', 'from_email', E::ts('From Email'), TRUE);
+    $this->addRule("from_email", E::ts('Email is not valid.'), 'email');
+    $this->add('select', 'relationship_type', E::ts('Relationship Type'), $this->getRelationshipTypes(), TRUE);
+    $this->add('select', 'relationship_option', E::ts('Send e-mail to'), $this->getRelatedOptions(), TRUE);
+    $this->add('text', 'cc', E::ts('Cc to'));
+    $this->addRule("cc", E::ts('Email is not valid.'), 'emailList');
+    $this->add('text', 'bcc', E::ts('Bcc to'));
+    $this->addRule("bcc", E::ts('Email is not valid.'), 'emailList');
+    $this->addEntityRef('template_id', E::ts('Message Template'),[
+      'entity' => 'MessageTemplate',
+      'api' => [
+        'label_field' => 'msg_title',
+        'search_field' => 'msg_title',
+        'params' => [
+          'is_active' => 1,
+          'workflow_id' => ['IS NULL' => 1],
+        ]
+      ],
+      'placeholder' => E::ts(' - select - '),
+    ], TRUE);
+    $this->add('checkbox','disable_smarty', E::ts('Disable Smarty'));
+    $this->add('select', 'location_type_id', E::ts('Location Type (if you do not want primary e-mail address)'), $this->getLocationTypes(), FALSE);
     if ($this->hasCase) {
-      $this->add('checkbox','file_on_case', ts('File Email on Case'));
+      $this->add('checkbox','file_on_case', E::ts('File Email on Case'));
     }
     $this->assign('has_case', $this->hasCase);
     // add buttons
     $this->addButtons([
-      ['type' => 'next', 'name' => ts('Save'), 'isDefault' => TRUE,],
-      ['type' => 'cancel', 'name' => ts('Cancel')]
+      ['type' => 'next', 'name' => E::ts('Save'), 'isDefault' => TRUE,],
+      ['type' => 'cancel', 'name' => E::ts('Cancel')]
     ]);
   }
 
@@ -170,6 +158,9 @@ class CRM_Emailapi_Form_CivirulesAction_SendToRelatedContact extends CRM_Core_Fo
     if (!empty($data['location_type_id'])) {
       $defaultValues['location_type_id'] = $data['location_type_id'];
     }
+    if (!empty($data['disable_smarty'])) {
+      $defaultValues['disable_smarty'] = $data['disable_smarty'];
+    }
     if (!empty($data['cc'])) {
       $defaultValues['cc'] = $data['cc'];
     }
@@ -194,6 +185,7 @@ class CRM_Emailapi_Form_CivirulesAction_SendToRelatedContact extends CRM_Core_Fo
     $data['relationship_type'] = $this->_submitValues['relationship_type'];
     $data['relationship_option'] = $this->_submitValues['relationship_option'];
     $data['template_id'] = $this->_submitValues['template_id'];
+    $data['disable_smarty'] = $this->_submitValues['disable_smarty'] ?? FALSE;
     $data['location_type_id'] = $this->_submitValues['location_type_id'];
     $data['cc'] = '';
     if (!empty($this->_submitValues['cc'])) {

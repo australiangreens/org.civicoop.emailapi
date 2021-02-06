@@ -3,6 +3,7 @@
  * @author Jaap Jansma <jaap.jansma@civicoop.org>
  * @license AGPL-3.0
  */
+use CRM_Emailapi_ExtensionUtil as E;
 
 class CRM_Emailapi_CivirulesAction_SendToRolesOnCase extends CRM_Civirules_Action {
 
@@ -29,13 +30,18 @@ class CRM_Emailapi_CivirulesAction_SendToRolesOnCase extends CRM_Civirules_Actio
       $params = $actionParams;
       $params['contact_id'] = $related_contact_id;
 
-      // change e-mailaddress if other location type is used, falling back on primary if set
+      // change e-mail address if other location type is used, falling back on primary if set
       $alternativeAddress = $this->checkAlternativeAddress($params, $related_contact_id);
       if ($alternativeAddress) {
         $params['alternative_receiver_address'] = $alternativeAddress;
       }
       $extra_data = (array) $triggerData;
       $params['extra_data'] = $extra_data["\0CRM_Civirules_TriggerData_TriggerData\0entity_data"];
+      foreach ($params['extra_data'] as $entity => $values) {
+        if (isset($values['id'])) {
+          $params["${entity}_id"] = $values['id'];
+        }
+      }
       //execute the action
       civicrm_api3('Email', 'send', $params);
 
@@ -74,7 +80,7 @@ class CRM_Emailapi_CivirulesAction_SendToRolesOnCase extends CRM_Civirules_Actio
 
   /**
    * Method to check if an alternative address is required. This is the case if:
-   * - the location type is set, then the e-mailaddress of the specific location type (if found) is to be used.
+   * - the location type is set, then the e-mail address of the specific location type (if found) is to be used.
    * - if alternative receiver address is set, that is to be used
    *
    * @param array $actionParameters
@@ -137,14 +143,14 @@ class CRM_Emailapi_CivirulesAction_SendToRolesOnCase extends CRM_Civirules_Actio
         $locationText = 'location type ' . civicrm_api3('LocationType', 'getvalue', [
             'return' => 'display_name',
             'id' => $params['location_type_id'],
-          ]) . ' with primary e-mailaddress as fall back';
+          ]) . ' with primary e-mail address as fall back';
       }
       catch (CiviCRM_API3_Exception $ex) {
         $locationText = 'location type ' . $params['location_type_id'];
       }
     }
     else {
-      $locationText = "primary e-mailaddress";
+      $locationText = "primary e-mail address";
     }
     $to = '';
     $relationship_types = self::getRelationshipTypes();
