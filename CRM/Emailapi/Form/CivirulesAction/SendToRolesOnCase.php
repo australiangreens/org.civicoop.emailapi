@@ -1,5 +1,6 @@
 <?php
 
+use CRM_Emailapi_ExtensionUtil as E;
 /**
  * Form controller class
  *
@@ -55,33 +56,8 @@ class CRM_Emailapi_Form_CivirulesAction_SendToRolesOnCase extends CRM_Core_Form 
     parent::preProcess();
   }
 
-  /**
-   * Method to get message templates
-   *
-   * @return array
-   * @access protected
-   */
-
-  protected function getMessageTemplates() {
-    $return = ['' => ts('-- please select --')];
-    try {
-      $messageTemplates = civicrm_api3('MessageTemplate', 'get', [
-        'return' => ["id", "msg_title"],
-        'is_active' => 1,
-        'workflow_id' => ['IS NULL' => 1],
-        'options' => ['limit' => 0, 'sort' => "msg_title"],
-      ]);
-      foreach ($messageTemplates['values'] as $templateId => $template) {
-        $return[$templateId] = $template['msg_title'];
-      }
-    }
-    catch (CiviCRM_API3_Exception $ex) {
-    }
-    return $return;
-  }
-
   protected function getRelationshipTypes() {
-    return ['' => ts('All people with a role on the case')] + CRM_Emailapi_CivirulesAction_SendToRelatedContact::getRelationshipTypes('a_b');
+    return ['' => E::ts('All people with a role on the case')] + CRM_Emailapi_CivirulesAction_SendToRelatedContact::getRelationshipTypes('a_b');
   }
 
   /**
@@ -92,7 +68,7 @@ class CRM_Emailapi_Form_CivirulesAction_SendToRolesOnCase extends CRM_Core_Form 
    */
 
   protected function getLocationTypes() {
-    $return = ['' => ts('-- please select --')];
+    $return = ['' => E::ts('-- please select --')];
     try {
       $locationTypes = civicrm_api3('LocationType', 'get', [
         'return' => ["id", "display_name"],
@@ -113,20 +89,32 @@ class CRM_Emailapi_Form_CivirulesAction_SendToRolesOnCase extends CRM_Core_Form 
     $this->setFormTitle();
     $this->registerRule('emailList', 'callback', 'emailList', 'CRM_Utils_Rule');
     $this->add('hidden', 'rule_action_id');
-    $this->add('text', 'from_name', ts('From Name'), TRUE);
-    $this->add('text', 'from_email', ts('From Email'), TRUE);
-    $this->addRule("from_email", ts('Email is not valid.'), 'email');
-    $this->add('select', 'relationship_type', ts('Restrict to Roles'), $this->getRelationshipTypes(), FALSE);
-    $this->add('text', 'cc', ts('Cc to'));
-    $this->addRule("cc", ts('Email is not valid.'), 'emailList');
-    $this->add('text', 'bcc', ts('Bcc to'));
-    $this->addRule("bcc", ts('Email is not valid.'), 'emailList');
-    $this->add('select', 'template_id', ts('Message Template'), $this->getMessageTemplates(), TRUE);
-    $this->add('select', 'location_type_id', ts('Location Type (if you do not want primary e-mail address)'), $this->getLocationTypes(), FALSE);
+    $this->add('text', 'from_name', E::ts('From Name'), TRUE);
+    $this->add('text', 'from_email', E::ts('From Email'), TRUE);
+    $this->addRule("from_email", E::ts('Email is not valid.'), 'email');
+    $this->add('select', 'relationship_type', E::ts('Restrict to Roles'), $this->getRelationshipTypes(), FALSE);
+    $this->add('text', 'cc', E::ts('Cc to'));
+    $this->addRule("cc", E::ts('Email is not valid.'), 'emailList');
+    $this->add('text', 'bcc', E::ts('Bcc to'));
+    $this->addRule("bcc", E::ts('Email is not valid.'), 'emailList');
+    $this->addEntityRef('template_id', E::ts('Message Template'),[
+      'entity' => 'MessageTemplate',
+      'api' => [
+        'label_field' => 'msg_title',
+        'search_field' => 'msg_title',
+        'params' => [
+          'is_active' => 1,
+          'workflow_id' => ['IS NULL' => 1],
+        ]
+      ],
+      'placeholder' => E::ts(' - select - ')
+    ], TRUE);
+    $this->add('checkbox','disable_smarty', E::ts('Disable Smarty'));
+    $this->add('select', 'location_type_id', E::ts('Location Type (if you do not want primary e-mail address)'), $this->getLocationTypes(), FALSE);
     // add buttons
     $this->addButtons([
-      ['type' => 'next', 'name' => ts('Save'), 'isDefault' => TRUE,],
-      ['type' => 'cancel', 'name' => ts('Cancel')]
+      ['type' => 'next', 'name' => E::ts('Save'), 'isDefault' => TRUE,],
+      ['type' => 'cancel', 'name' => E::ts('Cancel')]
     ]);
   }
 
@@ -158,6 +146,9 @@ class CRM_Emailapi_Form_CivirulesAction_SendToRolesOnCase extends CRM_Core_Form 
     if (!empty($data['location_type_id'])) {
       $defaultValues['location_type_id'] = $data['location_type_id'];
     }
+    if (!empty($data['disable_smarty'])) {
+      $defaultValues['disable_smarty'] = $data['disable_smarty'];
+    }
     if (!empty($data['cc'])) {
       $defaultValues['cc'] = $data['cc'];
     }
@@ -178,6 +169,7 @@ class CRM_Emailapi_Form_CivirulesAction_SendToRolesOnCase extends CRM_Core_Form 
     $data['relationship_type'] = $this->_submitValues['relationship_type'];
     $data['template_id'] = $this->_submitValues['template_id'];
     $data['location_type_id'] = $this->_submitValues['location_type_id'];
+    $data['disable_smarty'] = $this->_submitValues['disable_smarty'] ?? FALSE;
     $data['cc'] = '';
     if (!empty($this->_submitValues['cc'])) {
       $data['cc'] = $this->_submitValues['cc'];

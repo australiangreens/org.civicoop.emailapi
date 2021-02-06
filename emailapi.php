@@ -1,6 +1,16 @@
 <?php
-
 require_once 'emailapi.civix.php';
+use CRM_Emailapi_ExtensionUtil as E;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+
+/**
+ * Implements hook_civicrm_container().
+ *
+ * @param ContainerBuilder $container
+ */
+function emailapi_civicrm_container(ContainerBuilder $container) {
+  $container->addCompilerPass(new Civi\Emailapi\CompilerPass());
+}
 
 /**
  * Implementation of hook_civicrm_config
@@ -29,6 +39,13 @@ function emailapi_civicrm_xmlMenu(&$files) {
  */
 function emailapi_civicrm_install() {
   _emailapi_civix_civicrm_install();
+}
+
+/**
+ * Implementation of hook_civicrm_postInstall
+ */
+function emailapi_civicrm_postInstall() {
+  _emailapi_civix_civicrm_postInstall();
 }
 
 /**
